@@ -143,85 +143,90 @@ var throttle = function(fn,intetval){
 * 轨迹回放
 * init时需要传入相应地图类型的数据、gps数据、定时循环回调、执行完成回调
 * */
-var TrackPlayer = function () {
-    var timer = null;
-    var mapPointList = [];
-    var gpsFormatList = [];
-    var currentIndex = 0;
-    var maxCount = 0;
+(function(tools){
+    var TrackPlayer = function () {
+        var timer = null;
+        var mapPointList = [];
+        var gpsFormatList = [];
+        var currentIndex = 0;
+        var maxCount = 0;
 
-    var loop_callback = null;
-    var completed_callback = null;
+        var loop_callback = null;
+        var completed_callback = null;
 
-    var run = function () {
-        if (mapPointList != null && mapPointList.length !== 0 && currentIndex <= maxCount - 1) {
-            var point = mapPointList[currentIndex];
-            if (point) {
-                (loop_callback && typeof (loop_callback) === "function") && loop_callback(point,gpsFormatList[currentIndex]);
+        var run = function () {
+            if (mapPointList != null && mapPointList.length !== 0 && currentIndex <= maxCount - 1) {
+                var point = mapPointList[currentIndex];
+                if (point) {
+                    (loop_callback && typeof (loop_callback) === "function") && loop_callback(point,gpsFormatList[currentIndex]);
+                    timer = setTimeout(run, 1000);
+                    currentIndex += 1;
+                }
+                else {
+                    console.log("no point");
+                }
+            }
+
+            if (currentIndex > maxCount - 1) {
+                currentIndex = 0;
+                maxCount = 0;
+                clearTimeout(timer);
+                timer = null;
+                (completed_callback && typeof (completed_callback) === "function")
+                && completed_callback(point,gpsFormatList[currentIndex]);
+            }
+        };
+
+        return {
+            /*
+             * maplist_source[Array]:相应地图的轨迹点列表
+             * gpslist_source[Array]:相应gps的轨迹点列表
+             * loop[function]:每次移动的一个点的执行的回调
+             * completed[function]:整个跑完之后执行的回调
+             * */
+            init: function (maplist_source,gpslist_source,loop,completed) {
+                mapPointList = maplist_source;
+                gpsFormatList = gpslist_source;
+                maxCount = mapPointList.length;
+                loop_callback = loop;
+                completed_callback = completed;
+            },
+            start: function () {        //回放
+                currentIndex = 0;
+                if(timer){
+                    clearTimeout(timer);
+                    timer = null;
+                }
                 timer = setTimeout(run, 1000);
-                currentIndex += 1;
+            },
+            pause: function () {        //暂停
+                clearTimeout(timer);
+                timer = null;
+            },
+            goon: function () {         //继续
+                if(timer){
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                timer = setTimeout(run, 1000);
+            },
+            restart: function () {      //重跑
+                currentIndex = 0;
+                if(timer){
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                timer = setTimeout(run, 1000);
+            },
+            stop: function () {         //停止
+                currentIndex = 0;
+                maxCount = 0;
+                clearTimeout(timer);
+                timer = null;
             }
-            else {
-                console.log("no point");
-            }
-        }
-
-        if (currentIndex > maxCount - 1) {
-            currentIndex = 0;
-            maxCount = 0;
-            clearTimeout(timer);
-            timer = null;
-            (completed_callback && typeof (completed_callback) === "function")
-            && completed_callback(point,gpsFormatList[currentIndex]);
         }
     };
+    CKMap.Tools = tools || {};
+    CKMap.Tools.TrackPlayer = TrackPlayer;
+})(CKMap.Tools)
 
-    return {
-        /*
-        * maplist_source[Array]:相应地图的轨迹点列表
-        * gpslist_source[Array]:相应gps的轨迹点列表
-        * loop[function]:每次移动的一个点的执行的回调
-        * completed[function]:整个跑完之后执行的回调
-        * */
-        init: function (maplist_source,gpslist_source,loop,completed) {
-            mapPointList = maplist_source;
-            gpsFormatList = gpslist_source;
-            maxCount = mapPointList.length;
-            loop_callback = loop;
-            completed_callback = completed;
-        },
-        start: function () {        //回放
-            currentIndex = 0;
-            if(timer){
-                clearTimeout(timer);
-                timer = null;
-            }
-            timer = setTimeout(run, 1000);
-        },
-        pause: function () {        //暂停
-            clearTimeout(timer);
-            timer = null;
-        },
-        goon: function () {         //继续
-            if(timer){
-                clearTimeout(timer);
-                timer = null;
-            }
-            timer = setTimeout(run, 1000);
-        },
-        restart: function () {      //重跑
-            currentIndex = 0;
-            if(timer){
-                clearTimeout(timer);
-                timer = null;
-            }
-            timer = setTimeout(run, 1000);
-        },
-        stop: function () {         //停止
-            currentIndex = 0;
-            maxCount = 0;
-            clearTimeout(timer);
-            timer = null;
-        }
-    }
-};
