@@ -1,26 +1,32 @@
 /**
  * Created by CKeen on 2016/12/10.
  */
-
-
 var CKMap = CKMap ||{};
 
-(function(utill) {
+/**
+ * é…ç½®é¡¹
+ * */
+(function(configs){
+    CKMap.Configs = configs || {};
+    CKMap.Configs.CarUri="trafficar_33.png";
+})(CKMap.Configs);
 
+/**
+ * å®žç”¨ç±»
+ * */
+(function(utils) {
     var X_PI = 3.14159265358979324 * 3000.0 / 180.0;
     var PI = 3.1415926535897932384626;
     var a = 6378245.0;
     var ee = 0.00669342162296594323;
 
     /**
-     * ×ø±êÏµÍ³:wsg84(GPS×ø±ê),gcj02(¹ú²â£¬»ðÐÇ×ø±êÏµ),bd09(°Ù¶È×ø±ê)
-     * ËµÃ÷£ºwgs84£¬GPSÉè±¸Ô­Ê¼×ø±êÏµ
-     *      gcj02£¬¹ú²â¼ÓÆ«£¬¿ÉÒÔ¶Ôwgs84½øÐÐÒ»´Î¼ÓÆ«
-     *      bd09£¬°Ù¶È¼ÓÆ«£¬ÐèÒªÔÚ¹ú²â»ù´¡ÉÏÔÙ½øÐÐÒ»´Î¼ÓÆ«
-     *  ÖÐ¹ú¾­Î³¶È·¶Î§£ºÎ³¶È3.86~53.55,¾­¶È73.66~135.05
+     * åæ ‡ç³»ç»Ÿ:wsg84(GPSåæ ‡ç³»ç»Ÿ),gcj02(å›½æµ‹ï¼Œç«æ˜Ÿåæ ‡ç³»),bd09(ç™¾åº¦åæ ‡ç³»)
+     * è½¬æ¢è§„åˆ™ï¼ŒGPSè½¬æ¢åˆ°ç«æ˜Ÿåæ ‡ï¼Œç«æ˜Ÿåæ ‡å†è½¬æ¢åˆ°ç™¾åº¦åæ ‡
+     * ä¸­å›½åœ°ç†èŒƒå›´ï¼šç»åº¦ï¼š72.004 -- 137.8347 ï¼Œç»´åº¦ï¼š0.8293 -- 55.8271
      * */
 
-    //¹ú²â×ª°Ù¶È
+    //ç«æ˜Ÿåæ ‡è½¬ç™¾åº¦åº¦
     var Gcj02ToBd09 = function (gcjLat, gcjLng) {
         var x = +gcjLng;
         var y = +gcjLat;
@@ -32,7 +38,7 @@ var CKMap = CKMap ||{};
     };
 
 
-    //°Ù¶È×ª¹ú²â
+    //ç™¾åº¦è½¬ç«æ˜Ÿåæ ‡
     var Bd09ToGcj02 = function (bdLat, bdLng) {
         var x = +bdLng - 0.0065;
         var y = +bdLat - 0.006;
@@ -43,14 +49,14 @@ var CKMap = CKMap ||{};
         return {"lat": gcjLat, "lng": gcjLng};
     };
 
-    //Ë½ÓÐ£¬ÅÐ¶ÏÊÇ·ñÔÚÖÐ¹ú·¶Î§ÄÚ
+    //åˆ¤æ–­æ˜¯å¦åœ¨ä¸­å›½èŒƒå›´å†…
     var outOfChina = function (lat, lng) {
         var lat = +lat;
         var lng = +lng;
         return (lng > 72.004 && lng < 137.8347 && lat > 0.8293 && lat < 55.8271);
     };
 
-    //Ë½ÓÐ£¬ÅÐ¶ÏÊÇ·ñÔÚÖÐ¹ú·¶Î§ÄÚ
+    //çº¬åº¦è½¬æ¢
     var transformLat = function (lat, lng) {
         var lat = +lat;
         var lng = +lng;
@@ -61,7 +67,7 @@ var CKMap = CKMap ||{};
         return ret;
     };
 
-    //Ë½ÓÐ£¬ÅÐ¶ÏÊÇ·ñÔÚÖÐ¹ú·¶Î§ÄÚ
+    //ç»åº¦è½¬æ¢
     var transformLng = function (lat, lng) {
         var lat = +lat;
         var lng = +lng;
@@ -72,7 +78,7 @@ var CKMap = CKMap ||{};
         return ret
     };
 
-    //GPS×ª¹ú²â
+    //GPSè½¬ç«æ˜Ÿåæ ‡
     var Wgs84ToGcj02 = function (wgsLat, wgsLng) {
         var lat = +wgsLat;
         var lng = +wgsLng;
@@ -93,7 +99,7 @@ var CKMap = CKMap ||{};
         }
     };
 
-    //¹ú²â×ªGPS
+    //ç«æ˜Ÿè½¬GPS
     var Gcj02ToWgs84 = function (gcjLat, gcjLng) {
         var lat = +gcjLat;
         var lng = +gcjLng;
@@ -103,47 +109,28 @@ var CKMap = CKMap ||{};
         return {"lat": lat - dLat, "lng": lng - dLng};
     };
 
-    CKMap.Util = utill || {};
-    CKMap.Util.Gcj02ToBd09 = Gcj02ToBd09;
-    CKMap.Util.Bd09ToGcj02 = Bd09ToGcj02;
-    CKMap.Util.Wgs84ToGcj02 = Wgs84ToGcj02;
-    CKMap.Util.Gcj02ToWgs84 = Gcj02ToWgs84;
-})(CKMap.Util);
-
-/*
-* º¯Êý½ÚÁ÷
-* */
-var throttle = function(fn,intetval){
-    var __self = fn,
-        timer,
-        firstTime = true;
-
-    return function(){
-        var args = arguments,
-            __me = this;
-
-        if(firstTime){
-            __self.apply(__me,args);
-            return firstTime = false;
-        }
-
-        if(timer){
-            return false;
-        }
-
-        timer = setTimeout(function(){
-            clearTimeout(timer);
-            timer = null;
-            __self.apply(__me,args);
-        },interval || 500)
+    var loadJScript = function(src) {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = src;
+        document.body.appendChild(script);
     }
-};
+
+    CKMap.Utils = utils || {};
+    CKMap.Utils.Gcj02ToBd09 = Gcj02ToBd09;
+    CKMap.Utils.Bd09ToGcj02 = Bd09ToGcj02;
+    CKMap.Utils.Wgs84ToGcj02 = Wgs84ToGcj02;
+    CKMap.Utils.Gcj02ToWgs84 = Gcj02ToWgs84;
+    CKMap.Utils.loadJScript = loadJScript;
+})(CKMap.Utils);
 
 /*
-* ¹ì¼£»Ø·Å
-* initÊ±ÐèÒª´«ÈëÏàÓ¦µØÍ¼ÀàÐÍµÄÊý¾Ý¡¢gpsÊý¾Ý¡¢¶¨Ê±Ñ­»·»Øµ÷¡¢Ö´ÐÐÍê³É»Øµ÷
+* å·¥å…·ç±»
 * */
 (function(tools){
+    /*
+    * è½¨è¿¹å›žæ”¾å·¥å…·
+    * */
     var TrackPlayer = function () {
         var timer = null;
         var mapPointList = [];
@@ -179,10 +166,10 @@ var throttle = function(fn,intetval){
 
         return {
             /*
-             * maplist_source[Array]:ÏàÓ¦µØÍ¼µÄ¹ì¼£µãÁÐ±í
-             * gpslist_source[Array]:ÏàÓ¦gpsµÄ¹ì¼£µãÁÐ±í
-             * loop[function]:Ã¿´ÎÒÆ¶¯µÄÒ»¸öµãµÄÖ´ÐÐµÄ»Øµ÷
-             * completed[function]:Õû¸öÅÜÍêÖ®ºóÖ´ÐÐµÄ»Øµ÷
+             * maplist_source[Array]:åœ°å›¾åæ ‡
+             * gpslist_source[Array]:gpsåæ ‡
+             * loop[function]:æ¯æ¬¡ç§»åŠ¨çš„å›žè°ƒäº‹ä»¶
+             * completed[function]:å®Œæˆä¹‹åŽçš„äº‹ä»¶
              * */
             init: function (maplist_source,gpslist_source,loop,completed) {
                 mapPointList = maplist_source;
@@ -191,7 +178,7 @@ var throttle = function(fn,intetval){
                 loop_callback = loop;
                 completed_callback = completed;
             },
-            start: function () {        //»Ø·Å
+            start: function () {        //å¼€å§‹å›žæ”¾
                 currentIndex = 0;
                 if(timer){
                     clearTimeout(timer);
@@ -199,18 +186,18 @@ var throttle = function(fn,intetval){
                 }
                 timer = setTimeout(run, 1000);
             },
-            pause: function () {        //ÔÝÍ£
+            pause: function () {        //æš‚åœå›žæ”¾
                 clearTimeout(timer);
                 timer = null;
             },
-            goon: function () {         //¼ÌÐø
+            goon: function () {         //ç»§ç»­å›žæ”¾
                 if(timer){
                     clearTimeout(timer);
                     timer = null;
                 }
                 timer = setTimeout(run, 1000);
             },
-            restart: function () {      //ÖØÅÜ
+            restart: function () {      //é‡æ–°å›žæ”¾
                 currentIndex = 0;
                 if(timer){
                     clearTimeout(timer);
@@ -218,7 +205,7 @@ var throttle = function(fn,intetval){
                 }
                 timer = setTimeout(run, 1000);
             },
-            stop: function () {         //Í£Ö¹
+            stop: function () {         //åœæ­¢å›žæ”¾
                 currentIndex = 0;
                 maxCount = 0;
                 clearTimeout(timer);
@@ -228,5 +215,70 @@ var throttle = function(fn,intetval){
     };
     CKMap.Tools = tools || {};
     CKMap.Tools.TrackPlayer = TrackPlayer;
-})(CKMap.Tools)
+})(CKMap.Tools);
+
+
+
+(function(bdMap){
+
+    var map = null;
+
+    var init = function(mapContainer){
+        CKMap.Utils.loadJScript("http://api.map.baidu.com/api?v=2.0&ak=270a17b702f3c85aa0e446856d96dc59");
+        map = new BMap.Map(mapContainer);    // åˆ›å»ºMapå®žä¾‹
+        map.addControl(new BMap.MapTypeControl());   //æ·»åŠ åœ°å›¾ç±»åž‹æŽ§ä»¶
+        map.addControl(new BMap.NavigationControl({anchor: BMAP_ANCHOR_TOP_RIGHT}));
+        //map.setCurrentCity("åŒ—äº¬");          // è®¾ç½®åœ°å›¾æ˜¾ç¤ºçš„åŸŽå¸‚ æ­¤é¡¹æ˜¯å¿…é¡»è®¾ç½®çš„
+        map.setMinZoom(5);
+        map.enableScrollWheelZoom(true);     //å¼€å¯é¼ æ ‡æ»šè½®ç¼©æ”¾
+        map.centerAndZoom(new BMap.Point(103.809721,36.052854), map.getZoom());  // åˆå§‹åŒ–åœ°å›¾,è®¾ç½®ä¸­å¿ƒç‚¹åæ ‡å’Œåœ°å›¾çº§åˆ«
+    };
+
+    var MapIcons = {
+        "car_icon":new BMap.Icon(CKMap.Configs.CarUri, new BMap.Size(35, 26)),
+    }
+
+    var MapMarkers = {
+        "car_marker":new BMap.Marker(new BMap.Point(116.404, 39.915),{icon: MapIcons["car_icon"]}),
+    }
+
+    var AddTracker = function(pointlist){
+        var polyLine = new BMap.Polyline(pointlist,{strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //åˆ›å»ºå¼§çº¿å¯¹è±¡
+        map.addOverlay(polyLine); //æ·»åŠ åˆ°åœ°å›¾ä¸­
+    }
+
+    var BDTrackPlayer = function(maplist,gpslist){
+        var player = CKMap.Tools.TrackPlayer();
+        var trackMarker = MapMarkers["car_marker"];
+        player.init(maplist,gpslist,function(point,gpspoint){
+            map.addOverlay(trackMarker);
+            var point = new BMap.Point(point.lng,point.lat);
+            trackMarker.setPosition(point);
+            map.centerAndZoom(point,18);
+        },function(point,gpspoint){
+            map.removeOverlay(trackMarker);
+        });
+
+        return {
+            start:function(){
+                map.addOverlay(trackMarker);
+                player.start();
+            },
+            pause:player.pause,
+            goon:player.goon,
+            restart:function(){
+                player.restart();
+            },
+            stop:function(){
+                player.stop();
+                map.removeOverlay(trackMarker);
+            }
+        }
+    };
+
+    CKMap.BDMap = bdMap || {};
+    CKMap.BDMap.init = init;
+    CKMap.BDMap.addTrack = AddTracker;
+    CKMap.BDMap.BDTrackPlayer = BDTrackPlayer;
+})(CKMap.BDMap);
 
